@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Arkflow — App</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#08080A;--surface:#111115;--s2:#17171C;--border:#1E1E26;--text:#F0EDE4;--muted:#6B6B63;--accent:#C8F03C;--accent2:#A8D420;--adim:rgba(200,240,60,.10);--green:#4ADE80;--red:#FF5C5C}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;display:flex;flex-direction:column}
+#app{display:flex;flex:1;overflow:hidden}
+aside{width:215px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-logo{font-family:'DM Mono',monospace;font-size:14px;letter-spacing:.15em;padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sidebar-logo span{color:var(--accent)}
+.app-version{font-size:9px;font-family:'DM Mono',monospace;color:var(--border);letter-spacing:.08em}
+.nav-item{display:flex;align-items:center;gap:9px;padding:.55rem 1.25rem;font-size:13px;color:var(--muted);cursor:pointer;border-left:2px solid transparent;transition:all .15s;user-select:none}
+.nav-item:hover{color:var(--text);background:var(--s2)}
+.nav-item.active{color:var(--text);border-left-color:var(--accent);background:var(--s2)}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--adim);color:var(--accent);font-size:10px;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:99px}
+.nav-spacer{flex:1}
+.nav-section{padding:.5rem 1.25rem .25rem;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--border);margin-top:.5rem}
+main{flex:1;overflow-y:auto;background:var(--bg)}
+.view{padding:1.75rem 2rem;max-width:1100px}
+.view-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.75rem;gap:1rem;flex-wrap:wrap}
+.view-title{font-size:1.1rem;font-weight:500;letter-spacing:-.02em}
+.view-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#08080A}.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:var(--muted)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(255,92,92,.25)}.btn-danger:hover{background:rgba(255,92,92,.08)}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem}
+.mlabel{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem}
+.mval{font-size:1.5rem;font-weight:500;letter-spacing:-.03em;line-height:1}
+.msub{font-size:11px;color:var(--muted);margin-top:5px}
+.up{color:var(--green)}
+.section-hdr{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem}
+.wf-list{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.wf-row{background:var(--bg);padding:.875rem 1.1rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:background .15s}
+.wf-row:hover{background:var(--surface)}
+.wf-name{font-size:13px;font-weight:500}
+.wf-chips{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:3px;background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.wf-meta{display:flex;align-items:center;gap:1.1rem;flex-shrink:0}
+.wf-stat{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:right;line-height:1.4}
+.wf-stat b{display:block;color:var(--text);font-size:12px;font-weight:400}
+.toggle{width:34px;height:18px;background:var(--border);border-radius:99px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;width:12px;height:12px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(16px)}
+.activity{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.arow{padding:.7rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12px}
+.arow:last-child{border-bottom:none}
+.abadge{font-size:10px;padding:2px 7px;border-radius:99px;font-family:'DM Mono',monospace;flex-shrink:0}
+.ok{background:rgba(74,222,128,.1);color:var(--green)}
+.err{background:rgba(255,92,92,.1);color:var(--red)}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.25rem}
+.tab{padding:.5rem .875rem;font-size:12px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.builder-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1.25rem}
+.builder-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.875rem 1rem;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical;min-height:88px;outline:none;transition:border-color .2s;line-height:1.6}
+.builder-input:focus{border-color:rgba(200,240,60,.35)}
+.builder-input::placeholder{color:var(--muted)}
+.gen-box{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:1.1rem;margin-top:1.25rem}
+.gen-trigger{display:flex;align-items:center;gap:10px;padding:.7rem;background:var(--bg);border-radius:7px;margin-bottom:.875rem}
+.gen-step{display:flex;gap:10px;padding:.35rem 0;align-items:flex-start}
+.step-circle{width:22px;height:22px;border-radius:50%;background:var(--adim);color:var(--accent);font-size:10px;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-conn{width:1px;height:12px;background:var(--border);margin:2px auto}
+.step-card{flex:1;padding:.65rem .875rem;background:var(--bg);border:1px solid var(--border);border-radius:7px}
+.app-logo{border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'DM Mono',monospace;flex-shrink:0}
+.run-overlay{background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;border-radius:10px;min-height:300px}
+.run-modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.75rem;width:360px}
+.run-step{display:flex;align-items:center;gap:10px;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.run-step:last-child{border-bottom:none}
+.rstatus{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
+.waiting{background:var(--s2);border:1px solid var(--border)}
+.running{background:var(--adim);border:1px solid rgba(200,240,60,.3);animation:pulse 1s infinite}
+.done-s{background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);color:var(--green)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.int-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.int-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:all .2s}
+.int-card:hover{border-color:var(--muted)}
+.int-card.connected{border-color:rgba(74,222,128,.3)}
+.int-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+.int-name{font-size:12px;font-weight:500;text-align:center}
+.int-st{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.int-st.connected{color:var(--green)}
+.tmpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1.25rem}
+.tmpl-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.875rem;cursor:pointer;transition:border-color .15s}
+.tmpl-card:hover{border-color:var(--muted)}
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--muted)}
+.empty-state h3{color:var(--text);font-size:.95rem;margin-bottom:.5rem;font-weight:500}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fadein{animation:fadeIn .2s ease forwards}
+.ldots span{animation:blink 1.4s infinite both}
+.ldots span:nth-child(2){animation-delay:.2s}
+.ldots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar"></aside>
+  <main id="main"></main>
+</div>
+
+<script>
+const AC={Slack:'#E01E5A',Gmail:'#EA4335',Notion:'#8B8B8B',GitHub:'#6E7681',Airtable:'#F82B60',Salesforce:'#00A1E0',Linear:'#5E6AD2',Stripe:'#635BFF',Zoom:'#2D8CFF','Google Sheets':'#34A853',HubSpot:'#FF7A59',Asana:'#FC636B',Jira:'#0052CC',Dropbox:'#0061FF',Zapier:'#FF4A00'};
+const AB={Slack:'rgba(224,30,90,.18)',Gmail:'rgba(234,67,53,.18)',Notion:'rgba(139,139,139,.15)',GitHub:'rgba(110,118,129,.18)',Airtable:'rgba(248,43,96,.18)',Salesforce:'rgba(0,161,224,.18)',Linear:'rgba(94,106,210,.18)',Stripe:'rgba(99,91,255,.18)',Zoom:'rgba(45,140,255,.18)','Google Sheets':'rgba(52,168,83,.18)',HubSpot:'rgba(255,122,89,.18)',Asana:'rgba(252,99,107,.18)',Jira:'rgba(0,82,204,.18)',Dropbox:'rgba(0,97,255,.18)',Zapier:'rgba(255,74,0,.18)'};
+const ALL_APPS=['Slack','Gmail','Notion','GitHub','Airtable','Salesforce','Linear','Stripe','Google Sheets','HubSpot','Asana','Zoom','Jira','Dropbox','Zapier'];
+function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function alogo(app,size=28){const c=AC[app]||'#888';const b=AB[app]||'rgba(136,136,136,.15)';return`<div class="app-logo" style="width:${size}px;height:${size}px;background:${b};color:${c}">${ini(app)}</div>`}
+function chip(app){const c=AC[app]||'#888';return`<span class="chip"><span class="dot" style="background:${c}"></span>${app}</span>`}
+
+const DWF=[
+  {id:'wf_1',name:'New lead → CRM + Slack alert',trigger:{app:'Gmail',event:'New email matching "demo request"'},steps:[{id:1,app:'Salesforce',action:'Create Contact',description:'Add sender as new lead in Salesforce CRM'},{id:2,app:'Notion',action:'Create Page',description:'Create a lead tracking page with email summary'},{id:3,app:'Slack',action:'Send Message',description:'Notify #sales channel with lead details'}],active:true,runs:47,lastRun:'2 mins ago',successRate:98,createdAt:Date.now()-86400000*5,log:[{ts:'10:42 AM',status:'success',note:'john@acme.com'},{ts:'9:15 AM',status:'success',note:'sarah@corp.io'},{ts:'Yesterday',status:'error',note:'Salesforce timeout'}]},
+  {id:'wf_2',name:'GitHub PR → Linear + notify',trigger:{app:'GitHub',event:'Pull request opened'},steps:[{id:1,app:'Linear',action:'Create Issue',description:'Create a Linear ticket linked to the PR'},{id:2,app:'Slack',action:'Send Message',description:'Post PR summary to #engineering channel'}],active:true,runs:124,lastRun:'1 hour ago',successRate:100,createdAt:Date.now()-86400000*12,log:[{ts:'11:05 AM',status:'success',note:'PR #142: fix auth bug'},{ts:'10:50 AM',status:'success',note:'PR #141: update deps'}]},
+  {id:'wf_3',name:'Stripe payment → thank you email',trigger:{app:'Stripe',event:'Payment succeeded'},steps:[{id:1,app:'Gmail',action:'Send Email',description:'Send personalized thank you to customer'},{id:2,app:'Google Sheets',action:'Add Row',description:'Log payment to revenue tracking sheet'},{id:3,app:'Slack',action:'Send Message',description:'Celebrate in #revenue channel'}],active:false,runs:89,lastRun:'3 days ago',successRate:96,createdAt:Date.now()-86400000*20,log:[{ts:'Mon 3:20 PM',status:'success',note:'$299 · mike@startup.co'},{ts:'Mon 10:11 AM',status:'success',note:'$99 · lisa@co.com'}]}
+];
+
+let S={view:'dashboard',wfs:[],detailId:null,generating:false,generated:null,builderText:'',runningId:null,runSteps:[],tab:'steps',connected:['Slack','Gmail','Notion','GitHub']};
+
+async function boot(){
+  try{const r=await window.storage.get('ark_app_wfs');if(r&&r.value){const d=JSON.parse(r.value);S.wfs=d.length?d:[...DWF]}else{S.wfs=[...DWF]}}catch(e){S.wfs=[...DWF]}
+  render();
+}
+async function save(){try{await window.storage.set('ark_app_wfs',JSON.stringify(S.wfs))}catch(e){}}
+function nav(view,extra={}){S.view=view;Object.assign(S,extra);S.runningId=null;render();document.getElementById('main').scrollTop=0;}
+
+const NAVITEMS=[
+  {id:'dashboard',icon:'▦',label:'Dashboard'},
+  {id:'workflows',icon:'⟳',label:'Workflows',badge:true},
+  {id:'builder',icon:'+',label:'New workflow'},
+  {id:'integrations',icon:'⊞',label:'Integrations'}
+];
+
+function render(){
+  const ac=S.wfs.filter(w=>w.active).length;
+  document.getElementById('sidebar').innerHTML=`
+    <div class="sidebar-logo">ARK<span>FLOW</span><span class="app-version">APP</span></div>
+    <div class="nav-section">Main</div>
+    ${NAVITEMS.map(n=>`<div class="nav-item ${S.view===n.id?'active':''}" onclick="nav('${n.id}')">${`<span class="nav-icon">${n.icon}</span>`}${n.label}${n.badge&&ac>0?`<span class="nav-badge">${ac}</span>`:''}</div>`).join('')}
+    <div class="nav-spacer"></div>
+    <div class="nav-section">Account</div>
+    <div class="nav-item ${S.view==='settings'?'active':''}" onclick="nav('settings')"><span class="nav-icon">⚙</span>Settings</div>
+  `;
+  const views={dashboard:vDashboard,workflows:vWorkflows,builder:vBuilder,integrations:vIntegrations,detail:vDetail,settings:vSettings};
+  document.getElementById('main').innerHTML=(views[S.view]||vDashboard)();
+  if(S.view==='builder'){const ta=document.getElementById('bi');if(ta){ta.value=S.builderText;ta.oninput=e=>S.builderText=e.target.value;}}
+}
+
+function vDashboard(){
+  const ac=S.wfs.filter(w=>w.active).length;
+  const tr=S.wfs.reduce((s,w)=>s+w.runs,0);
+  const ts=Math.round(tr*3.2);
+  const avg=S.wfs.length?Math.round(S.wfs.reduce((s,w)=>s+w.successRate,0)/S.wfs.length):100;
+  const logs=S.wfs.flatMap(w=>(w.log||[]).map(l=>({...l,wn:w.name}))).slice(0,5);
+  return`<div class="view fadein">
+    <div class="view-hdr">
+      <div><div class="view-title">Dashboard</div><div class="view-sub">Welcome back. Here's what's running.</div></div>
+      <button class="btn btn-primary" onclick="nav('builder')">+ New workflow</button>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="mlabel">Active flows</div><div class="mval">${ac}</div><div class="msub">of ${S.wfs.length} total</div></div>
+      <div class="metric"><div class="mlabel">Runs today</div><div class="mval">${Math.max(1,Math.round(tr*.08))}</div><div class="msub up">↑ 12% vs yesterday</div></div>
+      <div class="metric"><div class="mlabel">Time saved</div><div class="mval">${ts}m</div><div class="msub">this week</div></div>
+      <div class="metric"><div class="mlabel">Success rate</div><div class="mval">${avg}%</div><div class="msub up">↑ 2% this week</div></div>
+    </div>
+    <div class="dash-grid">
+      <div>
+        <div class="section-hdr">Active workflows</div>
+        <div class="wf-list">${S.wfs.filter(w=>w.active).map(w=>`
+          <div class="wf-row" onclick="nav('detail',{detailId:'${w.id}'})">
+            <div style="flex:1"><div class="wf-name">${w.name}</div><div class="wf-chips">${chip(w.trigger.app)}</div></div>
+            <div style="text-align:right">
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${w.lastRun}</div>
+              <div style="font-size:10px;color:var(--green);margin-top:2px">${w.successRate}%</div>
+            </div>
+          </div>`).join('')||'<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:12px">No active workflows yet</div>'}
+        </div>
+      </div>
+      <div>
+        <div class="section-hdr">Recent activity</div>
+        <div class="activity">${logs.map(l=>`
+          <div class="arow">
+            <div class="dot" style="background:${l.status==='success'?'#4ADE80':'#FF5C5C'};width:6px;height:6px;flex-shrink:0;border-radius:50%"></div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:500">${l.wn}</div><div style="font-size:11px;color:var(--muted)">${l.note}</div></div>
+            <span class="abadge ${l.status==='success'?'ok':'err'}">${l.status}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:6px">${l.ts}</span>
+          </div>`).join('')||'<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:12px">No activity yet</div>'}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function vWorkflows(){
+  if(!S.wfs.length)return`<div class="view fadein"><div class="view-hdr"><div class="view-title">Workflows</div><button class="btn btn-primary" onclick="nav('builder')">+ New workflow</button></div><div class="empty-state"><div style="font-size:2rem;margin-bottom:1rem">⟳</div><h3>No workflows yet</h3><p>Build your first automation with AI.</p></div></div>`;
+  return`<div class="view fadein">
+    <div class="view-hdr">
+      <div><div class="view-title">Workflows</div><div class="view-sub">${S.wfs.length} total · ${S.wfs.filter(w=>w.active).length} active</div></div>
+      <button class="btn btn-primary" onclick="nav('builder')">+ New workflow</button>
+    </div>
+    <div class="wf-list">${S.wfs.map(w=>`
+      <div class="wf-row" onclick="nav('detail',{detailId:'${w.id}'})">
+        <div style="flex:1"><div class="wf-name">${w.name}</div><div class="wf-chips">${chip(w.trigger.app)}${w.steps.map(s=>chip(s.app)).join('')}</div></div>
+        <div class="wf-meta" onclick="event.stopPropagation()">
+          <div class="wf-stat"><b>${w.runs}</b>runs</div>
+          <div class="wf-stat"><b>${w.successRate}%</b>success</div>
+          <div class="wf-stat"><b style="font-size:10px">${w.lastRun}</b>last run</div>
+          <div class="toggle ${w.active?'on':''}" onclick="toggleWf('${w.id}')"></div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function toggleWf(id){const w=S.wfs.find(x=>x.id===id);if(w){w.active=!w.active;save();render();}}
+
+function vDetail(){
+  const w=S.wfs.find(x=>x.id===S.detailId);
+  if(!w)return vWorkflows();
+  if(S.runningId===w.id)return vRun(w);
+  const t=S.tab||'steps';
+  return`<div class="view fadein">
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1.5rem;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="nav('workflows')">← Back</button>
+      <div style="flex:1"><div class="view-title">${w.name}</div><div class="view-sub">Created ${new Date(w.createdAt).toLocaleDateString()}</div></div>
+      <div class="toggle ${w.active?'on':''}" onclick="toggleWf('${w.id}')"></div>
+      <button class="btn btn-primary btn-sm" onclick="runWf('${w.id}')">▶ Run now</button>
+      <button class="btn btn-danger btn-sm" onclick="delWf('${w.id}')">Delete</button>
+    </div>
+    <div class="tabs">
+      <div class="tab ${t==='steps'?'active':''}" onclick="setTab('steps')">Steps</div>
+      <div class="tab ${t==='log'?'active':''}" onclick="setTab('log')">Run log (${(w.log||[]).length})</div>
+    </div>
+    ${t==='steps'?`
+      <div class="section-hdr">Trigger</div>
+      <div class="gen-trigger" style="margin-bottom:1.25rem">${alogo(w.trigger.app,32)}<div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)">${w.trigger.app}</div><div style="font-size:13px">${w.trigger.event}</div></div></div>
+      <div class="section-hdr">Actions</div>
+      ${w.steps.map((s,i)=>`<div class="gen-step"><div style="display:flex;flex-direction:column;align-items:center"><div class="step-circle">${i+1}</div>${i<w.steps.length-1?'<div class="step-conn"></div>':''}</div><div class="step-card"><div style="display:flex;align-items:center;gap:8px">${alogo(s.app,24)}<div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)">${s.app}</div><div style="font-size:13px;font-weight:500">${s.action}</div></div></div><div style="font-size:12px;color:var(--muted);margin-top:5px;padding-left:32px">${s.description}</div></div></div>`).join('')}
+    `:`<div class="activity">${(w.log||[]).length?w.log.map(l=>`<div class="arow"><div class="dot" style="background:${l.status==='success'?'#4ADE80':'#FF5C5C'};width:6px;height:6px;flex-shrink:0;border-radius:50%"></div><div style="flex:1;font-size:12px">${l.note}</div><span class="abadge ${l.status==='success'?'ok':'err'}">${l.status}</span><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:8px">${l.ts}</span></div>`).join(''):'<div style="padding:2rem;text-align:center;color:var(--muted);font-size:12px">No runs yet — hit "Run now" to test.</div>'}</div>`}
+  </div>`;
+}
+
+function setTab(t){S.tab=t;render();}
+function delWf(id){S.wfs=S.wfs.filter(w=>w.id!==id);save();nav('workflows');}
+
+function runWf(id){
+  const w=S.wfs.find(x=>x.id===id);if(!w)return;
+  S.runningId=id;
+  S.runSteps=w.steps.map((s,i)=>({...s,status:i===0?'running':'waiting'}));
+  render();
+  let cur=0;
+  function tick(){
+    if(cur>0)S.runSteps[cur-1].status='done';
+    if(cur>=S.runSteps.length){
+      if(!w.log)w.log=[];
+      w.log.unshift({ts:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),status:'success',note:'Manual run'});
+      w.runs++;w.lastRun='just now';save();render();
+      setTimeout(()=>{S.runningId=null;render();},2200);return;
+    }
+    S.runSteps[cur].status='running';render();cur++;
+    setTimeout(tick,1100+Math.random()*700);
+  }
+  setTimeout(tick,500);
+}
+
+function vRun(w){
+  const done=S.runSteps.every(s=>s.status==='done');
+  return`<div class="view fadein">
+    <div class="view-hdr"><div class="view-title">Running: ${w.name}</div></div>
+    <div class="run-overlay">
+      <div class="run-modal">
+        <div style="font-size:13px;font-weight:500;margin-bottom:1.1rem;color:${done?'var(--green)':'var(--text)'}">${done?'✓ Completed successfully':'<span class="ldots">Running<span>.</span><span>.</span><span>.</span></span>'}</div>
+        ${S.runSteps.map(s=>`<div class="run-step"><div class="rstatus ${s.status==='done'?'done-s':s.status==='running'?'running':'waiting'}">${s.status==='done'?'✓':s.status==='running'?'●':''}</div><div style="flex:1"><div style="font-size:13px;font-weight:500">${s.action}</div><div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:1px">${s.app}</div></div><span style="font-size:10px;font-family:'DM Mono',monospace;color:${s.status==='done'?'var(--green)':s.status==='running'?'var(--accent)':'var(--muted)'}">${s.status==='done'?'done ✓':s.status==='running'?'running...':'waiting'}</span></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function vBuilder(){
+  return`<div class="view fadein">
+    <div class="view-hdr">
+      <div><div class="view-title">New workflow</div><div class="view-sub">Describe your automation in plain English — the AI will build it.</div></div>
+    </div>
+    <div class="builder-box">
+      <div class="section-hdr" style="margin-bottom:.6rem">What should this workflow do?</div>
+      <textarea class="builder-input" id="bi" placeholder="e.g. When a new row is added in Airtable, create a task in Asana, send a Slack message to #ops, and log it in Google Sheets"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:.75rem;gap:.5rem">
+        <button class="btn btn-ghost btn-sm" onclick="clearBuilder()">Clear</button>
+        <button class="btn btn-primary btn-sm" id="genbtn" onclick="genWf()">
+          ${S.generating?'<span class="ldots">Generating<span>.</span><span>.</span><span>.</span></span>':'✦ Generate with AI'}
+        </button>
+      </div>
+    </div>
+    ${S.generated?renderGen():''}
+    <div>
+      <div class="section-hdr">Start from a template</div>
+      <div class="tmpl-grid">
+        ${[
+          ['New lead → CRM + Slack','When I receive an email demo request, add to Salesforce, create Notion page, and notify Slack #sales'],
+          ['GitHub PR → Linear + notify','When a GitHub pull request is opened, create a Linear issue and post to #engineering on Slack'],
+          ['Stripe payment → thank you','When Stripe receives a payment, send a thank you email, log to Google Sheets, and celebrate in Slack'],
+          ['Airtable row → Asana task','When a new row is added in Airtable, create an Asana task and send a Slack notification to #ops']
+        ].map(([l,p])=>`<div class="tmpl-card" onclick="useTmpl('${p.replace(/'/g,"\\'")}')"><div style="font-size:13px;font-weight:500;margin-bottom:4px">${l}</div><div style="font-size:11px;color:var(--muted);line-height:1.5">${p.slice(0,70)}…</div></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderGen(){
+  const g=S.generated;
+  return`<div style="margin-bottom:1.25rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+      <div class="section-hdr" style="margin:0">Generated workflow</div>
+      <button class="btn btn-primary btn-sm" onclick="saveGen()">Save & activate →</button>
+    </div>
+    <div class="gen-box">
+      <div style="font-size:14px;font-weight:500;margin-bottom:.875rem">${g.name}</div>
+      <div class="gen-trigger">${alogo(g.trigger?.app||'',30)}<div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)">TRIGGER · ${g.trigger?.app||''}</div><div style="font-size:12px">${g.trigger?.event||''}</div></div></div>
+      ${(g.steps||[]).map((s,i)=>`<div class="gen-step"><div style="display:flex;flex-direction:column;align-items:center"><div class="step-circle">${i+1}</div>${i<g.steps.length-1?'<div class="step-conn"></div>':''}</div><div class="step-card"><div style="display:flex;align-items:center;gap:7px">${alogo(s.app,22)}<div><div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)">${s.app}</div><div style="font-size:13px;font-weight:500">${s.action}</div></div></div><div style="font-size:11px;color:var(--muted);margin-top:5px;padding-left:29px">${s.description}</div></div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+async function genWf(){
+  const ta=document.getElementById('bi');
+  const txt=ta?ta.value.trim():S.builderText.trim();
+  if(!txt)return;
+  S.generating=true;S.generated=null;S.builderText=txt;render();
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`You are Arkflow's AI workflow builder. Generate a workflow automation for: "${txt}"\n\nRespond ONLY with valid JSON (no markdown, no explanation):\n{"name":"short name max 6 words","trigger":{"app":"AppName","event":"specific trigger event"},"steps":[{"id":1,"app":"AppName","action":"Action Name","description":"one sentence description"}]}\n\nUse ONLY these apps: Slack, Gmail, Notion, Salesforce, Airtable, GitHub, Google Sheets, HubSpot, Stripe, Linear, Jira, Asana, Dropbox, Zoom, Zapier.\nGenerate 2-5 steps. Be specific and realistic.`}]})});
+    const d=await res.json();
+    const raw=d.content?.[0]?.text||'';
+    S.generated=JSON.parse(raw.replace(/```json|```/g,'').trim());
+  }catch(e){
+    S.generated={name:'Custom automation',trigger:{app:'Gmail',event:'New email received matching your criteria'},steps:[{id:1,app:'Notion',action:'Create Page',description:'Create a new page with the email content and metadata'},{id:2,app:'Slack',action:'Send Message',description:'Post a summary notification to your team channel'}]};
+  }
+  S.generating=false;render();
+}
+
+function useTmpl(p){S.builderText=p;S.generated=null;render();setTimeout(()=>genWf(),50);}
+function clearBuilder(){S.builderText='';S.generated=null;render();}
+function saveGen(){
+  const g=S.generated;if(!g)return;
+  const nw={id:'wf_'+Date.now(),name:g.name,trigger:g.trigger,steps:g.steps,active:true,runs:0,lastRun:'never',successRate:100,createdAt:Date.now(),log:[]};
+  S.wfs.unshift(nw);S.generated=null;S.builderText='';save();
+  nav('detail',{detailId:nw.id});
+}
+
+function vIntegrations(){
+  return`<div class="view fadein">
+    <div class="view-hdr"><div><div class="view-title">Integrations</div><div class="view-sub">${S.connected.length} connected · click any app to connect or disconnect</div></div></div>
+    <div class="int-grid">${ALL_APPS.map(app=>{
+      const cn=S.connected.includes(app);
+      const c=AC[app]||'#888';const b=AB[app]||'rgba(136,136,136,.15)';
+      return`<div class="int-card ${cn?'connected':''}" onclick="toggleInt('${app}')">
+        <div class="int-icon" style="background:${b};color:${c}">${ini(app)}</div>
+        <div class="int-name">${app}</div>
+        <div class="int-st ${cn?'connected':''}">${cn?'● connected':'○ connect'}</div>
+      </div>`;
+    }).join('')}
+    </div>
+  </div>`;
+}
+
+function toggleInt(app){
+  if(S.connected.includes(app)){S.connected=S.connected.filter(a=>a!==app);}
+  else{S.connected.push(app);}
+  render();
+}
+
+function vSettings(){
+  return`<div class="view fadein">
+    <div class="view-hdr"><div class="view-title">Settings</div></div>
+    <div style="max-width:440px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        ${[['Workspace','Arkflow'],['Plan','Early access · Free'],['AI model','claude-sonnet-4'],['API version','v1.0.0'],['Total workflows',S.wfs.length],['Total runs',S.wfs.reduce((s,w)=>s+w.runs,0)]].map(([l,v])=>`
+          <div style="padding:.875rem 1.1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
+            <span style="font-size:13px;color:var(--muted)">${l}</span>
+            <span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text)">${v}</span>
+          </div>`).join('')}
+        <div style="padding:.875rem 1.1rem">
+          <button class="btn btn-danger btn-sm" onclick="resetAll()">Reset all data</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function resetAll(){S.wfs=[...DWF];save();nav('dashboard');}
+
+boot();
+</script>
+</body>
+</html>
